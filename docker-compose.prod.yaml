@@ -1,0 +1,45 @@
+services:
+
+  backend:
+    build: .
+    restart: always
+    expose:  # new
+      - 80
+    environment:
+      - PGCONNSTRING=postgresql://{POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      - db
+    networks:
+      - traefik-public
+      - internal
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.app.loadbalancer.server.port=80
+      - traefik.http.routers.app-http.entrypoints=http
+      - traefik.http.routers.app-http.rule=Host(`api.donorojo.id`)
+      - traefik.docker.network=traefik-public
+      - traefik.http.routers.app-https.entrypoints=https
+      - traefik.http.routers.app-https.rule=Host(`api.donorojo.id`)
+      - traefik.http.routers.app-https.tls=true
+      - traefik.http.routers.app-https.tls.certresolver=letsencrypt
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
+      - traefik.http.routers.app-http.middlewares=https-redirect
+      - traefik.http.routers.app-https.middlewares=admin-auth
+  db:
+    image: postgres:13-alpine
+    expose:
+      - 5432
+    networks:
+      - internal
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+
+networks:
+  traefik-public:
+    external: true
+  internal:
+    external: false
+

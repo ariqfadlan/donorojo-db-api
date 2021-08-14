@@ -1,0 +1,51 @@
+# docker-compose.yml
+
+version: '3.9'
+
+services:
+  web:
+    build: .
+    expose:  # new
+      - 80
+    environment:
+      - PGCONNSTRING=${PGCONNSTRING}
+    depends_on:
+      - db
+    networks:
+      - dbapi
+      - internal
+    labels: # new
+      - "traefik.enable=true"
+      - "traefik.docker.network=dbapi"
+      - "traefik.http.routers.fastapi.rule=Host(`dbapi.localhost`)"
+  db:
+    image: postgres:13-alpine
+    expose:
+      - 5432
+    networks:
+      - internal
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+  traefik:
+    image: traefik:v2.4
+    command: [
+        "--providers.docker=true",
+        "--providers.docker.exposedbydefault=false",
+        "--entryPoints.web.address=:80",
+        "--api.insecure=true",
+        "--log.level=DEBUG"
+      ]
+    networks:
+      - dbapi
+    ports:
+      - 80:80
+      - 8081:8080
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+networks:
+  dbapi:
+    external: true
+  internal:
+    external: false
