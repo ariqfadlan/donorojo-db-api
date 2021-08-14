@@ -6,7 +6,7 @@ services:
     expose:  # new
       - 80
     environment:
-      - PGCONNSTRING=postgresql://{POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - PGCONNSTRING=${PGCONNSTRING}
     depends_on:
       - db
     networks:
@@ -19,7 +19,7 @@ services:
       - traefik.http.routers.app-http.rule=Host(`api.donorojo.id`)
       - traefik.docker.network=traefik-public
       - traefik.http.routers.app-https.entrypoints=https
-      - traefik.http.routers.app-https.rule=Host(`api.donorojo.id`)
+      - traefik.http.routers.app-https.rule=Host(`api.visitdonorojo.id`)
       - traefik.http.routers.app-https.tls=true
       - traefik.http.routers.app-https.tls.certresolver=letsencrypt
       - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
